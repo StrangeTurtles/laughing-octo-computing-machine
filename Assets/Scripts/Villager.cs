@@ -6,7 +6,7 @@ public class Villager : MonoBehaviour
 {
     public IDecision VillagerRoot;
     public bool attacked = false;
-    public int foodVal = 10;
+    public float foodVal = 10;
     public int health = 20;
     private int attackSpeed = 10;
     private int time = 0;
@@ -37,9 +37,15 @@ public class Villager : MonoBehaviour
 
         while (curDecision.MakeDecision() != null)
         {
-            VillagerRoot.MakeDecision();
-            curDecision = VillagerRoot.MakeDecision();
+            //VillagerRoot.MakeDecision();
+            //curDecision.MakeDecision();
+            curDecision = curDecision.MakeDecision();
         }
+        if(health <= 0)
+        {
+            Destroy(gameObject);
+        }
+        foodVal -= Time.deltaTime;
     }
 }
 
@@ -60,6 +66,14 @@ public class UnderAttack : IDecision
 
     public IDecision MakeDecision()
     {
+        if(villager.barbs.Count >= 1)
+        {
+            villager.attacked = true;
+        }
+        else
+        {
+            villager.attacked = false;
+        }
         return villager.attacked ? left : right;
     }
 }
@@ -81,6 +95,11 @@ public class EnemyNear : IDecision
 
     public IDecision MakeDecision()
     {
+        if (villager.barbs[villager.curTarget] == null)
+        {
+            villager.barbs.Remove(villager.barbs[villager.curTarget]);
+            return null;
+        }
         float distance = Mathf.Sqrt(Mathf.Pow(villager.transform.position.x - villager.barbs[villager.curTarget].transform.position.x, 2) + Mathf.Pow(villager.transform.position.z - villager.barbs[villager.curTarget].transform.position.z, 2));
         return (distance >= -.5 && distance <= .5) ? left : right;
     }
@@ -99,6 +118,7 @@ public class Attack : IDecision
 
     public IDecision MakeDecision()
     {
+        if(villager.barbs[villager.curTarget].GetComponent<Barbarians>() != null)
         villager.barbs[villager.curTarget].GetComponent<Barbarians>().health -= 1;
         return null;
     }
@@ -139,6 +159,7 @@ public class Hungry : IDecision
 
     public IDecision MakeDecision()
     {
+        //villager.foodVal--;
         return (villager.foodVal <= 0) ? left: right;
     }
 }

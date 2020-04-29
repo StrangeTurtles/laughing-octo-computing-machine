@@ -25,8 +25,12 @@ public class Barbarians : MonoBehaviour
 
         while (curDecision.MakeDecision() != null)
         {
-            BarbarianRoot.MakeDecision();
-            curDecision = BarbarianRoot.MakeDecision();
+            //BarbarianRoot.MakeDecision();
+            curDecision = curDecision.MakeDecision();
+        }
+        if (health <= 0)
+        {
+            Destroy(gameObject);
         }
     }
 }
@@ -46,15 +50,15 @@ public class NearVillager : IDecision
 
     public IDecision MakeDecision()
     {
-        if(barbarians.villagers.Count != 0)
+        if(barbarians.villagers.Count >= 1)
         {
-            int num = 0;
+            int num = -1;
             float distance = float.MaxValue;
             foreach (GameObject i in barbarians.villagers)
             {
-                float tempDistance = Mathf.Sqrt(Mathf.Pow(barbarians.transform.position.x - barbarians.villagers[num].transform.position.x, 2) + Mathf.Pow(barbarians.transform.position.z - barbarians.villagers[num].transform.position.z, 2));
                 num++;
-                if(distance < tempDistance)
+                float tempDistance = Mathf.Sqrt(Mathf.Pow(barbarians.transform.position.x - barbarians.villagers[num].transform.position.x, 2) + Mathf.Pow(barbarians.transform.position.z - barbarians.villagers[num].transform.position.z, 2));
+                if(distance > tempDistance)
                 {
                     distance = tempDistance;
                     barbarians.curTarget = num;
@@ -62,7 +66,10 @@ public class NearVillager : IDecision
             }
             return (distance >= -.5 && distance <= .5) ? left : right;
         }
-        return null;
+        else
+        {
+            return null;
+        }
     }
 }
 
@@ -78,6 +85,10 @@ public class AttackVillage : IDecision
     public IDecision MakeDecision()
     {
         barbarians.villagers[barbarians.curTarget].GetComponent<Villager>().health -= 1;
+        if(barbarians.villagers[barbarians.curTarget].GetComponent<Villager>().health <= 0)
+        {
+            barbarians.villagers.Remove(barbarians.villagers[barbarians.curTarget]);
+        }
         return null;
     }
 }
@@ -93,6 +104,7 @@ public class MoveVillage : IDecision
 
     public IDecision MakeDecision()
     {
+        barbarians.transform.position += ((barbarians.villagers[barbarians.curTarget].transform.position - barbarians.transform.position).normalized * .04f);
         return null;
     }
 }
